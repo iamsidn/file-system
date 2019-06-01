@@ -18,8 +18,7 @@ public class CLIENTConnection implements Runnable {
     @Override
     public void run() {
         try {
-            in = new BufferedReader(new InputStreamReader(
-                    clientSocket.getInputStream()));
+            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String clientSelection;
             while ((clientSelection = in.readLine()) != null) {
                 switch (clientSelection) {
@@ -28,10 +27,34 @@ public class CLIENTConnection implements Runnable {
                         break;
                     case "2":
                         String outGoingFileName;
-                        while ((outGoingFileName = in.readLine()) != null) {
-                            sendFile(outGoingFileName);
+                        String accessMode;
+                        while ((accessMode = in.readLine()) != null){
+                            // System.err.print(accessMode);
+                            switch(accessMode){
+                                case "Read":
+                                    while((outGoingFileName = in.readLine()) != null){
+                                        System.err.print("Preparing to send file...");
+                                        sendFile(outGoingFileName);
+                                        break;
+                                    }
+                                case "Write":
+                                    while((outGoingFileName = in.readLine()) != null){
+                                        System.err.print("Preparing to send file...");
+                                        sendFile(outGoingFileName);
+                                        // can add a waiting statement here.... stating that Client # is writing now.
+                                        String doneWriting;
+                                        while((doneWriting = in.readLine()) != null){
+                                            // System.err.print(doneWriting);
+                                            // System.err.print("here....");
+                                            switch(doneWriting){
+                                                case "Yes":
+                                                    receiveFile();
+                                                    break;
+                                            }
+                                        }
+                                    }
+                            }
                         }
-
                         break;
                     default:
                         System.out.println("Incorrect command received.");

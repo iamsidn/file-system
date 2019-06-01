@@ -9,6 +9,9 @@ public class FileClient {
 
     private static Socket sock;
     private static String fileName;
+    private static String mode;
+    private static String inputAfterWriting;
+    // private static String inputAfterWriting;
     private static BufferedReader stdin;
     private static PrintStream os;
 
@@ -24,19 +27,44 @@ public class FileClient {
         os = new PrintStream(sock.getOutputStream());
 
         try {
-              switch (Integer.parseInt(selectAction())) {
-            case 1:
-                os.println("1");
-                sendFile();
+            switch (Integer.parseInt(selectAction())) {
+                case 1:
+                    os.println("1");
+                    String fileName;
+                    System.err.print("Enter file name you wish to upload: ");
+                    fileName = stdin.readLine();
+                    sendFile(fileName);
+                    break;
+                case 2:
+                    os.println("2");
+                    System.err.print("Enter the Mode: Read or Write ?");
+                    mode = stdin.readLine();
+                    os.println(mode);
+                    switch(mode){
+                        case "Read":
+                            System.err.print("Enter file name you wish to read: ");
+                            fileName = stdin.readLine();
+                            os.println(fileName);
+                            receiveFile(fileName);
+                            break;
+                        case "Write":
+                            System.err.print("Enter file name you need to write in: ");
+                            fileName = stdin.readLine();
+                            os.println(fileName);
+                            receiveFile(fileName);
+                            System.err.print("Type 'Yes' to commit your changes.");
+                            inputAfterWriting = stdin.readLine();
+                            os.println(inputAfterWriting);
+                            System.err.print(inputAfterWriting);
+                            switch(inputAfterWriting){
+                                case "Yes":
+                                    System.err.print("here");
+                                    sendFile(("received_from_server_" + fileName));
+                                    break;
+                            }
+                    }
                 break;
-            case 2:
-                os.println("2");
-                System.err.print("Enter file name: ");
-                fileName = stdin.readLine();
-                os.println(fileName);
-                receiveFile(fileName);
-                break;
-        }
+            }
         } catch (Exception e) {
             System.err.println("not valid input");
         }
@@ -53,11 +81,10 @@ public class FileClient {
         return stdin.readLine();
     }
 
-    public static void sendFile() {
+    public static void sendFile(String fileName) {
         try {
-            System.err.print("Enter file name: ");
-            fileName = stdin.readLine();
-
+            // fileName = stdin.readLine();
+            System.err.print(fileName);
             File myFile = new File(fileName);
             byte[] mybytearray = new byte[(int) myFile.length()];
 
@@ -90,7 +117,7 @@ public class FileClient {
             DataInputStream clientData = new DataInputStream(in);
 
             fileName = clientData.readUTF();
-            OutputStream output = new FileOutputStream(("./Client_folder/received_from_server_" + fileName));
+            OutputStream output = new FileOutputStream(("received_from_server_" + fileName));
             long size = clientData.readLong();
             byte[] buffer = new byte[1024];
             while (size > 0 && (bytesRead = clientData.read(buffer, 0, (int) Math.min(buffer.length, size))) != -1) {
@@ -99,7 +126,7 @@ public class FileClient {
             }
 
             output.close();
-            in.close();
+            // in.close();
 
             System.out.println("File "+fileName+" received from Server.");
         } catch (IOException ex) {
