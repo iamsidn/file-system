@@ -19,31 +19,28 @@ public class MasterConnection implements Runnable {
     @Override
     public void run() {
         try {
-            in = new BufferedReader(new InputStreamReader(
-                    masterSocket.getInputStream()));
+            in = new BufferedReader(new InputStreamReader(masterSocket.getInputStream()));
 
             //get the filename,oper from a master
             String fname_oper = in.readLine();
             String[] pair = fname_oper.trim().split(",");
-
-            System.out.println(pair[0]);
-            System.out.println(pair[1]);
 
             //pair[0] has the file name ; pair[1] has the operation requested
             //operation could be check, reset, add, delete an entry in the map in Mutex server
 
             if (pair[1].equals("check")) {
                 flag = MutexServer.checkMutex(pair[0]);
+                System.out.println("Got Flag.." + flag);
+
                 //send flag to the master
-                OutputStream os = masterSocket.getOutputStream();
-                DataOutputStream dos = new DataOutputStream(os);
-                dos.writeInt(flag); //TODO flush
-                dos.flush();
+                PrintStream os = new PrintStream(masterSocket.getOutputStream());
+                os.println(flag);
                 System.out.println("Flag sent to Master server.");
             }
 
             else if (pair[1].equals("reset")) {
                 MutexServer.resetEntry(pair[0]);
+                System.out.println("Resetting.. ");
             }
 
             else if (pair[1].equals("add")) {

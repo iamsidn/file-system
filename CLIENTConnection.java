@@ -11,7 +11,7 @@ public class CLIENTConnection implements Runnable {
     private Socket clientSocket; // to connect to the client
     private static Socket sock1; //to connect to Mutex server
     private BufferedReader in = null;
-    private static BufferedReader stdin;
+    private static BufferedReader in2;
     private static PrintStream os;
     private static PrintStream os1;
 
@@ -23,6 +23,7 @@ public class CLIENTConnection implements Runnable {
     public void run() {
         try {
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
             String clientSelection;
             while ((clientSelection = in.readLine()) != null) {
                 switch (clientSelection) {
@@ -44,7 +45,6 @@ public class CLIENTConnection implements Runnable {
                                 case "Write":
                                     os = new PrintStream(clientSocket.getOutputStream()); // to write to client
 
-
                                     while((outGoingFileName = in.readLine()) != null){
                                         // check mutex and allow access
 
@@ -60,7 +60,7 @@ public class CLIENTConnection implements Runnable {
                                         try {
                                             //opening socket to mutex server
                                             sock1 = new Socket("localhost", 4445);
-                                            stdin = new BufferedReader(new InputStreamReader(System.in));
+                                            in2 = new BufferedReader(new InputStreamReader(sock1.getInputStream()));
                                             os1 = new PrintStream(sock1.getOutputStream()); //to write to mutex server
                                         } catch (Exception e) {
                                             System.err.println("Cannot connect to the mutex server, try again later.");
@@ -69,9 +69,10 @@ public class CLIENTConnection implements Runnable {
 
                                         try {
                                             os1.println(outGoingFileName + ",check"); // send this to mutex server
-                                            flag = Integer.parseInt(stdin.readLine());
+                                            flag = Integer.parseInt(in2.readLine());
+                                            System.out.println("Got this flag from Mutex Sever.. " + flag);
                                         } catch (Exception e) {
-                                            System.err.println("not valid input");
+                                            System.err.println("Could not read flag from mutex server");
                                         }
 
                                         if (flag == 0) { // okay to send
@@ -144,7 +145,8 @@ public class CLIENTConnection implements Runnable {
             try {
                 //opening socket to mutex server
                 sock1 = new Socket("localhost", 4445);
-                stdin = new BufferedReader(new InputStreamReader(System.in));
+                in2 = new BufferedReader(new InputStreamReader(sock1.getInputStream()));
+
             } catch (Exception e) {
                 System.err.println("Cannot connect to the mutex server, try again later.");
                 System.exit(1);
@@ -162,7 +164,6 @@ public class CLIENTConnection implements Runnable {
             System.err.println("Client error. Connection closed.");
         }
     }
-
     public void sendFile(String fileName) {
         try {
             //handle file read
