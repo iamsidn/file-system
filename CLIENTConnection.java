@@ -101,6 +101,8 @@ public class CLIENTConnection implements Runnable {
                                             // send exception to client
                                             os.println("File is locked, try again later !!");
                                         }
+
+                                        sock1.close();
                                     }
                             }
                         }
@@ -123,10 +125,15 @@ public class CLIENTConnection implements Runnable {
             int bytesRead;
 
             DataInputStream clientData = new DataInputStream(clientSocket.getInputStream());
+            System.out.println("In receive file....");
 
             String fileName = clientData.readUTF();
-            OutputStream output = new FileOutputStream(("./Server_folder/" + fileName));
+            System.out.println("Got a file..." + fileName);
+
+            OutputStream output = new FileOutputStream((fileName));
             long size = clientData.readLong();
+            System.out.println("Got a file of size:..." + size);
+
             byte[] buffer = new byte[1024];
             while (size > 0 && (bytesRead = clientData.read(buffer, 0, (int) Math.min(buffer.length, size))) != -1) {
                 output.write(buffer, 0, bytesRead);
@@ -155,10 +162,10 @@ public class CLIENTConnection implements Runnable {
             try {
                 os1 = new PrintStream(sock1.getOutputStream());
                 os1.println(fileName + ",add"); // send this to mutex server
+                sock1.close();
             } catch (Exception e) {
                 System.err.println("not valid input");
             }
-
 
         } catch (IOException ex) {
             System.err.println("Client error. Connection closed.");

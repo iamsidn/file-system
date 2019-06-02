@@ -103,6 +103,11 @@ public class FileClient {
             dos.writeLong(mybytearray.length);
             dos.write(mybytearray, 0, mybytearray.length);
             dos.flush();
+
+            fis.close();
+            bis.close();
+            dis.close();
+            dos.close();
             System.out.println("File "+fileName+" sent to Server.");
         } catch (Exception e) {
             System.err.println("File does not exist!");
