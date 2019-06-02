@@ -10,7 +10,7 @@ public class FileServer {
     private static ServerSocket serverSocket;
     private static Socket clientSocket = null;
 
-    static Set<String> files_blocked;
+    static Set<String> files_blocked = new HashSet<>();
 
     public static void main(String[] args) throws IOException {
 

@@ -8,10 +8,11 @@ import java.util.logging.Level;
 
 public class CLIENTConnection implements Runnable {
 
-    private Socket clientSocket;
-    private static Socket sock1;
+    private Socket clientSocket; // to connect to the client
+    private static Socket sock1; //to connect to Mutex server
     private BufferedReader in = null;
     private static BufferedReader stdin;
+    private static PrintStream os;
     private static PrintStream os1;
 
     public CLIENTConnection(Socket client) {
@@ -41,30 +42,31 @@ public class CLIENTConnection implements Runnable {
                                         break;
                                     }
                                 case "Write":
+                                    os = new PrintStream(clientSocket.getOutputStream()); // to write to client
+                                    os1 = new PrintStream(sock1.getOutputStream()); //to write to mutex server
+
                                     while((outGoingFileName = in.readLine()) != null){
                                         // check mutex and allow access
 
+                                        //if the file is there in the master's blocked list, return there only
                                         if(FileServer.files_blocked.contains(outGoingFileName)) {
                                             // send exception to client
-                                            PrintStream os = new PrintStream(clientSocket.getOutputStream());
                                             os.println("File is locked, try again later !!");
                                             break;
                                         }
 
                                         int flag = 0;
 
-
                                         try {
                                             //opening socket to mutex server
                                             sock1 = new Socket("localhost", 4445);
                                             stdin = new BufferedReader(new InputStreamReader(System.in));
                                         } catch (Exception e) {
-                                            System.err.println("Cannot connect to the server, try again later.");
+                                            System.err.println("Cannot connect to the mutex server, try again later.");
                                             System.exit(1);
                                         }
 
                                         try {
-                                            os1 = new PrintStream(sock1.getOutputStream());
                                             os1.println(outGoingFileName + ",check"); // send this to mutex server
                                             flag = Integer.parseInt(stdin.readLine());
                                         } catch (Exception e) {
@@ -84,15 +86,17 @@ public class CLIENTConnection implements Runnable {
                                                 // System.err.print("here....");
                                                 switch (doneWriting) {
                                                     case "Yes":
-                                                        receiveFile();
+                                                        receiveFile(); //receive the updated file
                                                         //reset the entry in the central server
                                                         os1.println(outGoingFileName + ",reset"); // send this to mutex server
+
+                                                        //also, remove from the local files_blocked
+                                                        FileServer.files_blocked.remove(outGoingFileName);
                                                         break;
                                                 }
                                             }
-                                        } else {
+                                        } else { //not okay to send
                                             // send exception to client
-                                            PrintStream os = new PrintStream(clientSocket.getOutputStream());
                                             os.println("File is locked, try again later !!");
                                         }
                                     }
@@ -131,6 +135,27 @@ public class CLIENTConnection implements Runnable {
             clientData.close();
 
             System.out.println("File "+fileName+" received from client.");
+
+            //whenever the receives a file, it should be put in HDFS and cleared off from master's memory
+
+            //the mutex server is to be updated
+
+            try {
+                //opening socket to mutex server
+                sock1 = new Socket("localhost", 4445);
+                stdin = new BufferedReader(new InputStreamReader(System.in));
+            } catch (Exception e) {
+                System.err.println("Cannot connect to the mutex server, try again later.");
+                System.exit(1);
+            }
+
+            try {
+                os1.println(fileName + ",add"); // send this to mutex server
+            } catch (Exception e) {
+                System.err.println("not valid input");
+            }
+
+
         } catch (IOException ex) {
             System.err.println("Client error. Connection closed.");
         }

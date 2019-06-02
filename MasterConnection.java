@@ -24,9 +24,12 @@ public class MasterConnection implements Runnable {
 
             //get the filename,oper from a master
             String fname_oper = in.readLine();
-            String[] pair = fname_oper.split(",");
+            String[] pair = fname_oper.trim().split(",");
 
             MutexServer mt = new MutexServer();
+
+            //pair[0] has the file name ; pair[1] has the operation requested
+            //operation could be check, reset, add, delete an entry in the map in Mutex server
 
             if (pair[1].equals("check")) {
                 flag = mt.checkMutex(pair[0]);
@@ -34,9 +37,11 @@ public class MasterConnection implements Runnable {
                 OutputStream os = masterSocket.getOutputStream();
                 DataOutputStream dos = new DataOutputStream(os);
                 dos.writeInt(flag); //TODO flush
+                dos.flush();
+                System.out.println("Flag sent to Master server.");
             } else if (pair[1].equals("reset")) {
                 mt.resetEntry(pair[0]);
-            } else if (pair[1].equals("add")) {
+            } else if (pair[1].equals("add")) { //TODO
                 mt.addEntry(Arrays.asList(pair[0]));
             } else if (pair[1].equals("delete")) {
                 mt.deleteEntry(Arrays.asList(pair[0]));
