@@ -9,7 +9,10 @@ import java.util.logging.Level;
 public class CLIENTConnection implements Runnable {
 
     private Socket clientSocket;
+    private static Socket sock1;
     private BufferedReader in = null;
+    private static BufferedReader stdin;
+    private static PrintStream os1;
 
     public CLIENTConnection(Socket client) {
         this.clientSocket = client;
@@ -39,18 +42,58 @@ public class CLIENTConnection implements Runnable {
                                     }
                                 case "Write":
                                     while((outGoingFileName = in.readLine()) != null){
-                                        System.err.print("Preparing to send file...");
-                                        sendFile(outGoingFileName);
-                                        // can add a waiting statement here.... stating that Client # is writing now.
-                                        String doneWriting;
-                                        while((doneWriting = in.readLine()) != null){
-                                            // System.err.print(doneWriting);
-                                            // System.err.print("here....");
-                                            switch(doneWriting){
-                                                case "Yes":
-                                                    receiveFile();
-                                                    break;
+                                        // check mutex and allow access
+
+                                        if(FileServer.files_blocked.contains(outGoingFileName)) {
+                                            // send exception to client
+                                            PrintStream os = new PrintStream(clientSocket.getOutputStream());
+                                            os.println("File is locked, try again later !!");
+                                            break;
+                                        }
+
+                                        int flag = 0;
+
+
+                                        try {
+                                            //opening socket to mutex server
+                                            sock1 = new Socket("localhost", 4445);
+                                            stdin = new BufferedReader(new InputStreamReader(System.in));
+                                        } catch (Exception e) {
+                                            System.err.println("Cannot connect to the server, try again later.");
+                                            System.exit(1);
+                                        }
+
+                                        try {
+                                            os1 = new PrintStream(sock1.getOutputStream());
+                                            os1.println(outGoingFileName + ",check"); // send this to mutex server
+                                            flag = Integer.parseInt(stdin.readLine());
+                                        } catch (Exception e) {
+                                            System.err.println("not valid input");
+                                        }
+
+                                        if (flag == 0) { // okay to send
+
+                                            FileServer.files_blocked.add(outGoingFileName);
+
+                                            System.err.print("Preparing to send file...");
+                                            sendFile(outGoingFileName);
+                                            // can add a waiting statement here.... stating that Client # is writing now.
+                                            String doneWriting;
+                                            while ((doneWriting = in.readLine()) != null) {
+                                                // System.err.print(doneWriting);
+                                                // System.err.print("here....");
+                                                switch (doneWriting) {
+                                                    case "Yes":
+                                                        receiveFile();
+                                                        //reset the entry in the central server
+                                                        os1.println(outGoingFileName + ",reset"); // send this to mutex server
+                                                        break;
+                                                }
                                             }
+                                        } else {
+                                            // send exception to client
+                                            PrintStream os = new PrintStream(clientSocket.getOutputStream());
+                                            os.println("File is locked, try again later !!");
                                         }
                                     }
                             }
@@ -120,4 +163,5 @@ public class CLIENTConnection implements Runnable {
             System.err.println("File does not exist!");
         } 
     }
+
 }
