@@ -59,7 +59,7 @@ public class FileClient {
                             switch(inputAfterWriting){
                                 case "Yes":
                                     System.err.print("here");
-                                    sendFile(("received_from_server_" + fileName));
+                                    sendFile((fileName));
                                     break;
                             }
                     }
@@ -75,7 +75,7 @@ public class FileClient {
 
     public static String selectAction() throws IOException {
         System.out.println("1. Send file.");
-        System.out.println("2. Recieve file.");
+        System.out.println("2. Receive file.");
         System.out.print("\nMake selection: ");
 
         return stdin.readLine();
@@ -117,7 +117,7 @@ public class FileClient {
             DataInputStream clientData = new DataInputStream(in);
 
             fileName = clientData.readUTF();
-            OutputStream output = new FileOutputStream(("received_from_server_" + fileName));
+            OutputStream output = new FileOutputStream((fileName));
             long size = clientData.readLong();
             byte[] buffer = new byte[1024];
             while (size > 0 && (bytesRead = clientData.read(buffer, 0, (int) Math.min(buffer.length, size))) != -1) {

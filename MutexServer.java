@@ -10,31 +10,31 @@ public class MutexServer {
     private static ServerSocket serverSocket;
     private static Socket masterSocket = null;
 
-    private static Map<String, Integer>  mutex;
+    private static Map<String, Integer> mutex  = new HashMap<>();
     //key : String -> filename
     //value : 0 -> available for write; 1 -> not available
 
     //whenever new files are added on any cluster, info about it should be populated here
     //add list of entries to the map
-    void addEntry(List<String> files) {
+    static void addEntry(List<String> files) {
         for (String file : files) {
             mutex.put(file, 0);
         }
     }
 
     //remove list of entries from the map
-    void deleteEntry(List<String> files) {
+    static void deleteEntry(List<String> files) {
         for (String file: files) {
             mutex.remove(file);
         }
     }
 
-    void resetEntry(String file) {
+    static void resetEntry(String file) {
         mutex.put(file, 0);
     }
 
     //returns 1 if file is already locked, 0 otherwise
-    int checkMutex(String file) {
+    static int checkMutex(String file) {
         if (mutex.get(file) == 1) {
             return 1;
         } else {

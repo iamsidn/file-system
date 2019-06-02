@@ -43,7 +43,7 @@ public class CLIENTConnection implements Runnable {
                                     }
                                 case "Write":
                                     os = new PrintStream(clientSocket.getOutputStream()); // to write to client
-                                    os1 = new PrintStream(sock1.getOutputStream()); //to write to mutex server
+
 
                                     while((outGoingFileName = in.readLine()) != null){
                                         // check mutex and allow access
@@ -61,6 +61,7 @@ public class CLIENTConnection implements Runnable {
                                             //opening socket to mutex server
                                             sock1 = new Socket("localhost", 4445);
                                             stdin = new BufferedReader(new InputStreamReader(System.in));
+                                            os1 = new PrintStream(sock1.getOutputStream()); //to write to mutex server
                                         } catch (Exception e) {
                                             System.err.println("Cannot connect to the mutex server, try again later.");
                                             System.exit(1);
@@ -123,7 +124,7 @@ public class CLIENTConnection implements Runnable {
             DataInputStream clientData = new DataInputStream(clientSocket.getInputStream());
 
             String fileName = clientData.readUTF();
-            OutputStream output = new FileOutputStream(("./Server_folder/received_from_client_" + fileName));
+            OutputStream output = new FileOutputStream(("./Server_folder/" + fileName));
             long size = clientData.readLong();
             byte[] buffer = new byte[1024];
             while (size > 0 && (bytesRead = clientData.read(buffer, 0, (int) Math.min(buffer.length, size))) != -1) {
@@ -150,6 +151,7 @@ public class CLIENTConnection implements Runnable {
             }
 
             try {
+                os1 = new PrintStream(sock1.getOutputStream());
                 os1.println(fileName + ",add"); // send this to mutex server
             } catch (Exception e) {
                 System.err.println("not valid input");
